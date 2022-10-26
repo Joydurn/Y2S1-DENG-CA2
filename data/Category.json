@@ -1,0 +1,9 @@
+[
+    {"category_id":"CHB1","category_name":"Children Bicycles"},
+    {"category_id":"CMB2","category_name":"Comfort Bicycles"},
+    {"category_id":"CRB3","category_name":"Cruisers Bicycles"},
+    {"category_id":"CYB4","category_name":"Cyclocross Bicycles"},
+    {"category_id":"ELB5","category_name":"Electric Bikes"},
+    {"category_id":"MOB6","category_name":"Mountain Bikes"},
+    {"category_id":"RDB7","category_name":"Road Bikes"}
+]

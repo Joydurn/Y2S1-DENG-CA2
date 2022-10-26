@@ -1,0 +1,12 @@
+[
+    {"staff_id":3031,"first_name":"Fabiola","last_name":"Jackson","email":"fabiola.jackson@bikes.shop","phone":"(831) 555-5554","active":"1","store_id":"ST1","manager_id":"NULL"},
+    {"staff_id":30310,"first_name":"Bernardine","last_name":"Houston","email":"bernardine.houston@bikes.shop","phone":"(972) 530-5557","active":"1","store_id":"ST3","manager_id":"3037"},
+    {"staff_id":3032,"first_name":"Mireya","last_name":"Copeland","email":"mireya.copeland@bikes.shop","phone":"(831) 555-5555","active":"1","store_id":"ST1","manager_id":"3031"},
+    {"staff_id":3033,"first_name":"Genna","last_name":"Serrano","email":"genna.serrano@bikes.shop","phone":"(831) 555-5556","active":"1","store_id":"ST1","manager_id":"3032"},
+    {"staff_id":3034,"first_name":"Virgie","last_name":"Wiggins","email":"virgie.wiggins@bikes.shop","phone":"(831) 555-5557","active":"1","store_id":"ST1","manager_id":"3032"},
+    {"staff_id":3035,"first_name":"Jannette","last_name":"David","email":"jannette.david@bikes.shop","phone":"(516) 379-4444","active":"1","store_id":"ST2","manager_id":"3031"},
+    {"staff_id":3036,"first_name":"Marcelene","last_name":"Boyer","email":"marcelene.boyer@bikes.shop","phone":"(516) 379-4445","active":"1","store_id":"ST2","manager_id":"3035"},
+    {"staff_id":3037,"first_name":"Venita","last_name":"Daniel","email":"venita.daniel@bikes.shop","phone":"(516) 379-4446","active":"1","store_id":"ST2","manager_id":"3035"},
+    {"staff_id":3038,"first_name":"Kali","last_name":"Vargas","email":"kali.vargas@bikes.shop","phone":"(972) 530-5555","active":"1","store_id":"ST3","manager_id":"3031"},
+    {"staff_id":3039,"first_name":"Layla","last_name":"Terrell","email":"layla.terrell@bikes.shop","phone":"(972) 530-5556","active":"1","store_id":"ST3","manager_id":"3037"}
+]

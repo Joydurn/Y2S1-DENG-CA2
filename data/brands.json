@@ -1,0 +1,11 @@
+[
+    {"brand_id":"BRD1","brand_name":"Electra"},
+    {"brand_id":"BRD2","brand_name":"Haro"},
+    {"brand_id":"BRD3","brand_name":"Heller"},
+    {"brand_id":"BRD4","brand_name":"Pure Cycles"},
+    {"brand_id":"BRD5","brand_name":"Ritchey"},
+    {"brand_id":"BRD6","brand_name":"Strider"},
+    {"brand_id":"BRD7","brand_name":"Sun Bicycles"},
+    {"brand_id":"BRD8","brand_name":"Surly"},
+    {"brand_id":"BRD9","brand_name":"Trek"}
+]

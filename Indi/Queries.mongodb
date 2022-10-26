@@ -1,0 +1,205 @@
+// cd C:\Program Files\MongoDB\Tools\100\bin
+// mongoimport --db Bikes --collection CollName --file 'C:/mongodata/Something.json --jsonArray
+
+
+// Select the database to use.
+use('Bikes')
+
+// //Count Unsold
+db.Unsold.countDocuments({})
+// // Count Zerostock
+db.ZeroStock.countDocuments({})
+// Count Stock
+db.Stock.countDocuments({})
+//Query 1 Implement a query to find out those bike names which are less than $2000 and belonging to Road Bikes and have zero stock
+db.ZeroStock.find(
+    {list_price: {$lt:2000}, category_name: "Road Bikes"},
+    {product_name:1, category_name: 2, brand_name: 3, model_year:4 ,list_price:5,'_id': false}
+).sort({list_price:-1})
+
+//Query 2 Implement a query to find out the unduplicated category names and unduplicated brand names separately for these unsold products
+//Part A Category Names
+use ('Bikes')
+db.Unsold.aggregate([
+   {"$group":{_id:"$category_name"
+    ,count:{"$sum":1}
+    }}
+])
+//Part B Brand Names
+use ('Bikes')
+db.Unsold.aggregate([
+    {"$group":{_id:"$brand_name",count:{$sum:1}}}
+])
+
+//Query 3 - Implement a query to find the unduplicated sets of category names and brand names in combination
+use ('Bikes')
+db.Stock.aggregate([
+    {
+        $unionWith: {
+          coll: 'ZeroStock',
+          pipeline: []
+        } 
+    },
+    {
+        "$group":{_id:["$category_name","$brand_name"]}
+    }
+])
+//Query 4 - Implement a query to find the information of those products which are unsold and have stock
+use ('Bikes')
+db.Unsold.aggregate([
+    {
+        $lookup:{
+            from: "Stock",
+            localField:"product_id",
+            foreignField:"product_id",
+            as:"Stores"
+        }
+    },
+    {
+        $match:{
+            "Stores":{$not:{$eq:[]}}
+        }
+    },
+    {
+         $project:{"_id":0,"product_id":1,"product_name":1,"brand_name":1,"category_name":1,"model_year":1,"list_price":1,"Stores.store_id":1,"Stores.quantity":1}
+     }
+ ])
+// Query 5 – Making use of the product_id from Query 4, implement a query to find their total stock available arranged in descending order
+use ('Bikes')
+db.Unsold.aggregate([
+    {
+        $lookup:{
+            from: "Stock",
+            localField:"product_id",
+            foreignField:"product_id",
+            as:"matchedProduct"
+        }
+    },
+    {
+        $match:{
+            "matchedProduct":{$not:{$eq:[]}}
+        }
+    },
+    {
+        $project:{
+            "_id":0,
+            "product_id":1,
+            "product_name":1,
+            "brand_name":1,
+            "category_name":1,
+            "model_year":1,
+            "list_price":1,
+            "totalStock":{$sum:"$matchedProduct.quantity"}
+            }
+    },
+    {
+        $sort:{"totalStock":-1}
+    }
+])
+// Query 6 – Modify Query 4 and implement a query to find the information of those products which are sold but do not have stock
+use ('Bikes')
+db.ZeroStock.aggregate([
+    {
+        $lookup:{
+            from: "UnSold",
+            localField:"product_id",
+            foreignField:"product_id",
+            as:"matchedProduct"
+        }
+    },
+    {
+        $match:{
+            "matchedProduct":{$eq:[]}
+        }
+    },
+    {
+        $project:{"_id":0,"product_id":1,"product_name":1,"brand_name":1,"category_name":1,"model_year":1,"list_price":1,"matchedProduct":1}
+
+    }
+])
+
+/*
+**************RESULTS****************
+16
+
+8
+
+914
+
+QUERY 1
+{ "product_name" : "Trek Checkpoint ALR 5 - 2019", "brand_name" : "Trek", "category_name" : "Road Bikes", "model_year" : 2019, "list_price" : 1999.99 }
+{ "product_name" : "Trek Checkpoint ALR 5 Women's - 2019", "brand_name" : "Trek", "category_name" : "Road Bikes", "model_year" : 2019, "list_price" : 1999.99 }
+{ "product_name" : "Trek Checkpoint ALR 4 Women's - 2019", "brand_name" : "Trek", "category_name" : "Road Bikes", "model_year" : 2019, "list_price" : 1699.99 }
+
+QUERY 2A
+{ "_id" : "Children Bicycles", "count" : 5 }
+{ "_id" : "Mountain Bikes", "count" : 3 }
+{ "_id" : "Road Bikes", "count" : 7 }
+{ "_id" : "Electric Bikes", "count" : 1 }
+
+QUERY 2B
+{ "_id" : "Surly", "count" : 1 }
+{ "_id" : "Electra", "count" : 4 }
+{ "_id" : "Trek", "count" : 11 }
+
+
+QUERY 3
+{ "_id" : [ "Comfort Bicycles", "Electra" ] }
+{ "_id" : [ "Children Bicycles", "Trek" ] }
+{ "_id" : [ "Cruisers Bicycles", "Pure Cycles" ] }
+{ "_id" : [ "Mountain Bikes", "Sun Bicycles" ] }
+{ "_id" : [ "Children Bicycles", "Electra" ] }
+{ "_id" : [ "Cruisers Bicycles", "Sun Bicycles" ] }
+{ "_id" : [ "Road Bikes", "Trek" ] }
+{ "_id" : [ "Road Bikes", "Surly" ] }
+{ "_id" : [ "Electric Bikes", "Electra" ] }
+{ "_id" : [ "Comfort Bicycles", "Sun Bicycles" ] }
+{ "_id" : [ "Electric Bikes", "Trek" ] }
+{ "_id" : [ "Children Bicycles", "Sun Bicycles" ] }
+{ "_id" : [ "Mountain Bikes", "Surly" ] }
+{ "_id" : [ "Cruisers Bicycles", "Electra" ] }
+{ "_id" : [ "Electric Bikes", "Sun Bicycles" ] }
+{ "_id" : [ "Children Bicycles", "Strider" ] }
+{ "_id" : [ "Mountain Bikes", "Heller" ] }
+{ "_id" : [ "Cyclocross Bicycles", "Trek" ] }
+{ "_id" : [ "Children Bicycles", "Haro" ] }
+{ "_id" : [ "Mountain Bikes", "Ritchey" ] }
+{ "_id" : [ "Cyclocross Bicycles", "Surly" ] }
+{ "_id" : [ "Mountain Bikes", "Trek" ] }
+{ "_id" : [ "Mountain Bikes", "Haro" ] }
+
+QUERY 4
+
+{ "product_id" : "MOB125", "product_name" : "Trek Kids' Dual Sport - 2018", "brand_name" : "Trek", "category_name" : "Mountain Bikes", "model_year" : 2018, "list_price" : 469.99, "Stores" : [ { "store_id" : "ST3", "quantity" : 2 }, { "store_id" : "ST2", "quantity" : 10 }, { "store_id" : "ST1", "quantity" : 22 } ] }
+{ "product_id" : "CHB289", "product_name" : "Electra Superbolt 1 20\" - 2018", "brand_name" : "Electra", "category_name" : "Children Bicycles", "model_year" : 2018, "list_price" : 319.99, "Stores" : [ { "store_id" : "ST1", "quantity" : 2 }, { "store_id" : "ST2", "quantity" : 5 }, { "store_id" : "ST3", "quantity" : 2 } ] }
+{ "product_id" : "CHB267", "product_name" : "Trek Precaliber 12 Girl's - 2018", "brand_name" : "Trek", "category_name" : "Children Bicycles", "model_year" : 2018, "list_price" : 199.99, "Stores" : [ { "store_id" : "ST1", "quantity" : 27 }, { "store_id" : "ST2", "quantity" : 21 }, { "store_id" : "ST3", "quantity" : 12 } ] }
+{ "product_id" : "CHB284", "product_name" : "Electra Savannah 1 (20-inch) - Girl's - 2018", "brand_name" : "Electra", "category_name" : "Children Bicycles", "model_year" : 2018, "list_price" : 319.99, "Stores" : [ { "store_id" : "ST3", "quantity" : 26 }, { "store_id" : "ST1", "quantity" : 27 }, { "store_id" : "ST2", "quantity" : 6 } ] }
+{ "product_id" : "RDB154", "product_name" : "Trek Domane SLR 6 Disc Women's - 2018", "brand_name" : "Trek", "category_name" : "Road Bikes", "model_year" : 2018, "list_price" : 5499.99, "Stores" : [ { "store_id" : "ST1", "quantity" : 13 }, { "store_id" : "ST2", "quantity" : 9 }, { "store_id" : "ST3", "quantity" : 22 } ] }
+{ "product_id" : "MOB1", "product_name" : "Trek 820 - 2016", "brand_name" : "Trek", "category_name" : "Mountain Bikes", "model_year" : 2016, "list_price" : 379.99, "Stores" : [ { "store_id" : "ST3", "quantity" : 14 }, { "store_id" : "ST2", "quantity" : 14 }, { "store_id" : "ST1", "quantity" : 27 } ] }
+{ "product_id" : "MOB121", "product_name" : "Surly Krampus Frameset - 2018", "brand_name" : "Surly", "category_name" : "Mountain Bikes", "model_year" : 2018, "list_price" : 2499.99, "Stores" : [ { "store_id" : "ST2", "quantity" : 3 }, { "store_id" : "ST1", "quantity" : 19 }, { "store_id" : "ST3", "quantity" : 4 } ] }
+{ "product_id" : "CHB291", "product_name" : "Electra Sweet Ride 1 (20-inch) - Girl's - 2018", "brand_name" : "Electra", "category_name" : "Children Bicycles", "model_year" : 2018, "list_price" : 319.99, "Stores" : [ { "store_id" : "ST3", "quantity" : 10 }, { "store_id" : "ST1", "quantity" : 9 }, { "store_id" : "ST2", "quantity" : 22 } ] }
+{ "product_id" : "ELB195", "product_name" : "Electra Townie Go! 8i Ladies' - 2018", "brand_name" : "Electra", "category_name" : "Electric Bikes", "model_year" : 2018, "list_price" : 2599.99, "Stores" : [ { "store_id" : "ST3", "quantity" : 20 }, { "store_id" : "ST1", "quantity" : 1 }, { "store_id" : "ST2", "quantity" : 19 } ] }
+{ "product_id" : "CHB266", "product_name" : "Trek Superfly 20 - 2018", "brand_name" : "Trek", "category_name" : "Children Bicycles", "model_year" : 2018, "list_price" : 399.99, "Stores" : [ { "store_id" : "ST3", "quantity" : 18 }, { "store_id" : "ST1", "quantity" : 1 }, { "store_id" : "ST2", "quantity" : 18 } ] }
+
+QUERY 5
+{ "product_id" : "CHB267", "product_name" : "Trek Precaliber 12 Girl's - 2018", "brand_name" : "Trek", "category_name" : "Children Bicycles", "model_year" : 2018, "list_price" : 199.99, "totalStock" : 60 }
+{ "product_id" : "CHB284", "product_name" : "Electra Savannah 1 (20-inch) - Girl's - 2018", "brand_name" : "Electra", "category_name" : "Children Bicycles", "model_year" : 2018, "list_price" : 319.99, "totalStock" : 59 }
+{ "product_id" : "MOB1", "product_name" : "Trek 820 - 2016", "brand_name" : "Trek", "category_name" : "Mountain Bikes", "model_year" : 2016, "list_price" : 379.99, "totalStock" : 55 }
+{ "product_id" : "RDB154", "product_name" : "Trek Domane SLR 6 Disc Women's - 2018", "brand_name" : "Trek", "category_name" : "Road Bikes", "model_year" : 2018, "list_price" : 5499.99, "totalStock" : 44 }
+{ "product_id" : "CHB291", "product_name" : "Electra Sweet Ride 1 (20-inch) - Girl's - 2018", "brand_name" : "Electra", "category_name" : "Children Bicycles", "model_year" : 2018, "list_price" : 319.99, "totalStock" : 41 }
+{ "product_id" : "ELB195", "product_name" : "Electra Townie Go! 8i Ladies' - 2018", "brand_name" : "Electra", "category_name" : "Electric Bikes", "model_year" : 2018, "list_price" : 2599.99, "totalStock" : 40 }
+{ "product_id" : "CHB266", "product_name" : "Trek Superfly 20 - 2018", "brand_name" : "Trek", "category_name" : "Children Bicycles", "model_year" : 2018, "list_price" : 399.99, "totalStock" : 37 }
+{ "product_id" : "MOB125", "product_name" : "Trek Kids' Dual Sport - 2018", "brand_name" : "Trek", "category_name" : "Mountain Bikes", "model_year" : 2018, "list_price" : 469.99, "totalStock" : 34 }
+{ "product_id" : "MOB121", "product_name" : "Surly Krampus Frameset - 2018", "brand_name" : "Surly", "category_name" : "Mountain Bikes", "model_year" : 2018, "list_price" : 2499.99, "totalStock" : 26 }
+{ "product_id" : "CHB289", "product_name" : "Electra Superbolt 1 20\" - 2018", "brand_name" : "Electra", "category_name" : "Children Bicycles", "model_year" : 2018, "list_price" : 319.99, "totalStock" : 9 }
+
+QUERY 6
+{ "product_id" : "CMB314", "product_name" : "Electra Townie Original 21D EQ Ladies' - 2018", "brand_name" : "Electra", "category_name" : "Comfort Bicycles", "model_year" : 2018, "list_price" : 679.99 }
+{ "product_id" : "RDB319", "product_name" : "Trek Checkpoint SL 5 Women's - 2019", "brand_name" : "Trek", "category_name" : "Road Bikes", "model_year" : 2019, "list_price" : 2799.99 }
+{ "product_id" : "RDB320", "product_name" : "Trek Checkpoint SL 6 - 2019", "brand_name" : "Trek", "category_name" : "Road Bikes", "model_year" : 2019, "list_price" : 3799.99 }
+{ "product_id" : "RDB316", "product_name" : "Trek Checkpoint ALR 4 Women's - 2019", "brand_name" : "Trek", "category_name" : "Road Bikes", "model_year" : 2019, "list_price" : 1699.99 }
+{ "product_id" : "RDB317", "product_name" : "Trek Checkpoint ALR 5 - 2019", "brand_name" : "Trek", "category_name" : "Road Bikes", "model_year" : 2019, "list_price" : 1999.99 }
+{ "product_id" : "RDB321", "product_name" : "Trek Checkpoint ALR Frameset - 2019", "brand_name" : "Trek", "category_name" : "Road Bikes", "model_year" : 2019, "list_price" : 3199.99 }
+{ "product_id" : "CMB315", "product_name" : "Electra Townie Original 21D Ladies' - 2018", "brand_name" : "Electra", "category_name" : "Comfort Bicycles", "model_year" : 2018, "list_price" : 559.99 }
+{ "product_id" : "RDB318", "product_name" : "Trek Checkpoint ALR 5 Women's - 2019", "brand_name" : "Trek", "category_name" : "Road Bikes", "model_year" : 2019, "list_price" : 1999.99 }
+*/
